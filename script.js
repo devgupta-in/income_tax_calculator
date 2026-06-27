@@ -14,23 +14,63 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
 });
 
 function calculateTax(income) {
+    let taxableIncome = income;
+    let tax = 0;
+
+    // Tax slabs (FY 2026-27 New Regime)
+    if (taxableIncome > 2400000) {
+        tax += (taxableIncome - 2400000) * 0.30;
+        taxableIncome = 2400000;
+    }
+
+    if (taxableIncome > 2000000) {
+        tax += (taxableIncome - 2000000) * 0.25;
+        taxableIncome = 2000000;
+    }
+
+    if (taxableIncome > 1600000) {
+        tax += (taxableIncome - 1600000) * 0.20;
+        taxableIncome = 1600000;
+    }
+
+    if (taxableIncome > 1200000) {
+        tax += (taxableIncome - 1200000) * 0.15;
+        taxableIncome = 1200000;
+    }
+
+    if (taxableIncome > 800000) {
+        tax += (taxableIncome - 800000) * 0.10;
+        taxableIncome = 800000;
+    }
+
+    if (taxableIncome > 400000) {
+        tax += (taxableIncome - 400000) * 0.05;
+    }
+
+    // Section 87A Rebate
     if (income <= 1200000) {
-        return 0;
+        tax = 0;
     }
 
-    if (income <= 1600000) {
-        return (income - 1200000) * 0.15;
+    // Surcharge
+    let surchargeRate = 0;
+
+    if (income > 50000000) {
+        surchargeRate = 0.25;
+    } else if (income > 20000000) {
+        surchargeRate = 0.25;
+    } else if (income > 10000000) {
+        surchargeRate = 0.15;
+    } else if (income > 5000000) {
+        surchargeRate = 0.10;
     }
 
-    if (income <= 2000000) {
-        return (income - 1600000) * 0.20 + 60000;
-    }
+    tax += tax * surchargeRate;
 
-    if (income <= 2400000) {
-        return (income - 2000000) * 0.25 + 140000;
-    }
+    // Health & Education Cess (4%)
+    tax += tax * 0.04;
 
-    return (income - 2400000) * 0.30 + 240000;
+    return Math.round(tax);
 }
 
 function showError(message) {
@@ -69,10 +109,14 @@ form.addEventListener("submit", (event) => {
 
     taxAmount.textContent = currencyFormatter.format(tax);
     postTaxIncome.textContent = currencyFormatter.format(income - tax);
-    effectiveRate.textContent = `${rate.toFixed(1)}%`;
+    effectiveRate.textContent = `${rate.toFixed(2)}%`;
+
     result.classList.add("is-visible");
     result.setAttribute("aria-hidden", "false");
-    result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    result.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
 
     form.reset();
 });
